@@ -125,7 +125,12 @@
             // console.log(calculateNextTrainTime(firstTrainTime,30))
             
 
-           
+           function minsAway () {
+
+            var currentTime= moment();
+            var time = (Time, 'HH:mm')
+
+           }
 
 
 
@@ -145,7 +150,7 @@
                 var trainFirstTime = $("#firstTime-input").val()
                 var trainFreq = $("#freq-input").val()
                 var nextTrainTime= (calculateNextTrainTime(trainFirstTime,trainFreq))
-                // var minsAway = 
+                var minsAway = 
                 
                
 
@@ -191,7 +196,7 @@
                  var cellfrequency = $("<td>").text(dbfrequency)
                  var cellarrivalTime = $("<td>").text(dbarrivalTime)
 
-                debugger
+                
                 
                 tRow.append(cellName,celldestination, cellfrequency,cellarrivalTime)
 
