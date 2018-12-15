@@ -6,6 +6,9 @@
     <title>Train Schedule</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+    <!-- <link rel="stylesheet" type="text/css" href="css/style.css"> -->
+    <link rel="stylesheet" type="text/css" href="css/flipclock.css">
+
 </head>
 
 <body>
@@ -15,9 +18,15 @@
         <div class="jumbotron jumbotron-fluid" style="color: white; text-align:center ;background-color:rgb(0, 0, 0)">
             <div class="container">
                 <h1 class="display-4"></h1>
-                <h1>Train Schedule </h1>
+                <h1 style="text-align: end">METRO RAIL <br></h1>
             </div>
         </div>
+
+     
+
+        <!-- <div id="clock"></div> -->
+
+        <div class="clock"></div>
 
 
 
@@ -25,11 +34,11 @@
             <thead>
                 <tr>
                     <!-- The scope attribute specifies that this is a header for a column -->
-                    <th scope="col">Train Name </th>
-                    <th scope="col">Destination </th>
-                    <th scope="col">Frequency (min)</th>
-                    <th scope="col">Next Arrival </th>
-                    <th scope="col">Minutes Away </th>
+                    <th class="headers" scope="col">Train Name </th>
+                    <th class="headers"scope="col">Destination </th>
+                    <th class="headers"scope="col">Frequency (min)</th>
+                    <th class="headers"scope="col">Next Arrival </th>
+                    <th class="headers"scope="col">Minutes Away </th>
                 </tr>
 
 
@@ -37,6 +46,7 @@
             </thead>
             <tbody id="tableBody">
                 <tr class="inputData">
+                    <!-- <div class="linebelow"></div> -->
                     <td id="TrainName"></td>
                     <td id="Destination"></td>
                     <td id="Frequency"></td>
@@ -65,7 +75,7 @@
 
             <div class="form-group row">
                 <label for="firstTraintime-input">First train time (HH:mm - military time)</label>
-                <input class="form-control" id="firstTime-input" type="time">
+                <input class="form-control" id="firstTime-input" type="text" placeholder="HH:mm" maxlength="5">
             </div>
 
             <div class="form-group row">
@@ -84,58 +94,64 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
 
+        <script src="javascript/flipclock.min.js"></script>
+
 
         <script>
-           // Initialize Firebase
+
+            var clock = $('.clock').FlipClock({
+                clockFace: 'TwelveHourClock'
+            });
+
+
+
+            // Initialize Firebase
             var config = {
-            apiKey: "AIzaSyCePYIii4Pa5fL9wDNxwMxE5MMOULhXF68",
-            authDomain: "trainschedule-adcad.firebaseapp.com",
-            databaseURL: "https://trainschedule-adcad.firebaseio.com",
-            projectId: "trainschedule-adcad",
-            storageBucket: "",
-            messagingSenderId: "592950143752"
+                apiKey: "AIzaSyCePYIii4Pa5fL9wDNxwMxE5MMOULhXF68",
+                authDomain: "trainschedule-adcad.firebaseapp.com",
+                databaseURL: "https://trainschedule-adcad.firebaseio.com",
+                projectId: "trainschedule-adcad",
+                storageBucket: "",
+                messagingSenderId: "592950143752"
             };
             firebase.initializeApp(config);
 
 
-            var database = firebase.database()
+            var database = firebase.database();
 
-            var firstTrainTime = '5:00'
+            var militaryTimePattern = /^([01]\d|2[0-3]):?([0-5]\d)$/;
 
-              function calculateNextTrainTime(firstTrainTime, trainInterval) {
+            $( document ).ready(function() {
+                
+                $('#firstTime-input').on('blur', function (event) {
+                    let v = $(this).val();
+                    if (!v.match(militaryTimePattern)) {
+                        alert('Invalid Time Format');
+                    }
+                });
+            });
 
-            //  get the diffence in minutes
-            var time1 = moment(firstTrainTime, "HH:mm");
-            var currentTime = moment();
+            function calculateNextTrainTimeObj(firstTrainTime, trainInterval) {
 
-            var timeDif = currentTime.diff(time1);
+                //  get the diffence in minutes
+                var time1 = moment(firstTrainTime, "HH:mm");
+                var currentTime = moment();
 
-       
-            var differenceInMinutes = moment.duration(timeDif).asMinutes();
-
-            var remainingMinutes = differenceInMinutes % trainInterval;
-            console.log(remainingMinutes)
-
-            //  return the next train time      
-            return currentTime.subtract(remainingMinutes, 'minutes').format("hh:mm A");
-            
-
-            }      
-            
-            // console.log(calculateNextTrainTime(firstTrainTime,30))
-            
-
-           function minsAway () {
-
-            var currentTime= moment();
-            var time = (Time, 'HH:mm')
-
-           }
+                var timeDif = currentTime.diff(time1);
 
 
+                var differenceInMinutes = moment.duration(timeDif).asMinutes();
 
-          
+                var remainingMinutes = differenceInMinutes % trainInterval;
+                console.log(remainingMinutes)
 
+                //  return the next train time      
+                return {
+                    nextTime : currentTime.subtract(remainingMinutes, 'minutes').add(trainInterval, 'minutes').format("HH:mm A"),
+                    minsAway : moment.duration(trainInterval - remainingMinutes, "minutes").humanize()
+                };
+
+            }
 
 
 
@@ -148,90 +164,60 @@
                 var trainName = $("#name-input").val()
                 var trainDest = $("#dest-input").val()
                 var trainFirstTime = $("#firstTime-input").val()
-                var trainFreq = $("#freq-input").val()
-                var nextTrainTime= (calculateNextTrainTime(trainFirstTime,trainFreq))
-                var minsAway = 
-                
-               
+                var trainFreq = $("#freq-input").val();
+
+                var nextTimeObj = calculateNextTrainTimeObj(trainFirstTime, trainFreq);
+
+                var nextTrainTime = nextTimeObj.nextTime;
+                var minsAway = nextTimeObj.minsAway;
+
+
+                var newTrain = {
+
+                    name: trainName,
+                    destination: trainDest,
+                    startTime: trainFirstTime,
+                    frequency: trainFreq,
+                    arrivalTime: nextTrainTime,
+                    TrainMinsAway: minsAway
+
+
+                }
+
+                database.ref().push(newTrain)
+
+
+            })
+
+
+            database.ref().on("child_added", function (snapshot) {
+
+                var dbTrainName = (snapshot).val().name;
+                var dbdestination = (snapshot).val().destination;
+                var dbstartTime = (snapshot).val().startTime;
+                var dbfrequency = (snapshot).val().frequency
+                var dbarrivalTime = (snapshot).val().arrivalTime
+                var dbMinsAway = (snapshot).val().TrainMinsAway
+
+                var tRow = $("<tr>")
+                $(tRow).addClass("my-class")
+
+                var cellName = $("<td>").text(dbTrainName);
+                var celldestination = $("<td>").text(dbdestination);
+                var cellstartTime = $("<td>").text(dbstartTime);
+                var cellfrequency = $("<td>").text(dbfrequency);
+
+                var nextTimeObj = calculateNextTrainTimeObj(dbstartTime, dbfrequency);
+                var cellarrivalTime = $("<td>").text(nextTimeObj.nextTime);
+                var cellMinsAway = $("<td>").text(nextTimeObj.minsAway);
 
 
 
-                
-
-
-               var newTrain = {
-               
-               name: trainName,
-               destination: trainDest,
-               startTime: trainFirstTime,
-               frequency: trainFreq,
-               arrivalTime: nextTrainTime
-
-
-               }
-
-               database.ref().push(newTrain)
-
-
-                })
-
-         
-
-
-
-                database.ref().on("child_added", function (snapshot){
-
-                    var dbTrainName= (snapshot).val().name;
-                    var dbdestination = (snapshot).val().destination;
-                    var dbstartTime = (snapshot).val().startTime; 
-                    var dbfrequency = (snapshot).val().frequency  
-                    var dbarrivalTime = (snapshot).val().arrivalTime 
-                    
-
-                 var tRow = $("<tr>")
-                 
-                 var cellName = $("<td>").text(dbTrainName)
-                 var celldestination = $("<td>").text(dbdestination)
-                 var cellstartTime = $("<td>").text(dbstartTime)
-                 var cellfrequency = $("<td>").text(dbfrequency)
-                 var cellarrivalTime = $("<td>").text(dbarrivalTime)
-
-                
-                
-                tRow.append(cellName,celldestination, cellfrequency,cellarrivalTime)
+                tRow.append(cellName, celldestination, cellfrequency, cellarrivalTime, cellMinsAway)
 
                 $("#tableBody").append(tRow)
 
-                });
-
-
-
-           
-            
-
-
-           
-
-           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            });
 
 
         </script>
